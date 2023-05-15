@@ -12,45 +12,46 @@ import Combine
 
 class NetworkManager {
     
-    func request<T: Decodable>(from endPoint: EndPointEnum, paramsData: Params?) ->AnyPublisher<T, Error> {
-        
-            // Create URL components from the base URL
-        var urlComponents = URLComponents(url: endPoint.url, resolvingAgainstBaseURL: false)
-        
-            // Add query parameters to the URL components for .get requests
-        if !endPoint.isJSONEncoded {
-            if let params = paramsData {
-                urlComponents?.queryItems = params.map { URLQueryItem(name: $0.key, value: $0.value as? String) }
-            }
-        }
-            // Create a URLRequest from the final URL
-        var request = URLRequest(url: urlComponents?.url ?? endPoint.url)
+    func request<T: Decodable>(from endPoint: EndPointEnum, paramsData: Params?) -> AnyPublisher<T, Error> {
+            // Create a URLRequest from the base URL
+        var request = URLRequest(url: endPoint.url)
             // Set the HTTP method of the request
         request.httpMethod = endPoint.httpMethod.rawValue
         
-            // Set the request body for .post requests
         if endPoint.isJSONEncoded {
+                // Set the request body for .post requests
             if let parameters = paramsData, let bodyData = try? JSONSerialization.data(withJSONObject: parameters, options: []) {
                 request.httpBody = bodyData
-                print("bodyData:",bodyData)
             }
+        } else {
+                // Create URL components from the base URL
+            var urlComponents = URLComponents(url: endPoint.url, resolvingAgainstBaseURL: false)
+                // Add query parameters to the URL components for .get requests
+            if let params = paramsData {
+                urlComponents?.queryItems = params.map { URLQueryItem(name: $0.key, value: $0.value as? String) }
+            }
+            guard let url = urlComponents?.url else {
+                return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
+            }
+            request.url = url
         }
         
             // Set common headers, such as API keys and content type
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        endPoint.headers?.forEach { key, value in
+            request.setValue(value, forHTTPHeaderField: key)
+        }
         
         return URLSession.shared.dataTaskPublisher(for: request)
-            .tryMap({ data, response in
-                
+            .tryMap { data, response in
                     // If the response is invalid, throw an error
-                print("response:",response.description)
-                    // Return Response data
+                    // Return Response data if valid
                 return data
-            })
-            .decode(type: T.self, decoder : JSONDecoder())
+            }
+            .decode(type: T.self, decoder: JSONDecoder())
             .receive(on: DispatchQueue.main)
             .eraseToAnyPublisher()
     }
+    
 }
 
 typealias Params = [String: Any]
@@ -59,6 +60,7 @@ protocol Request {
     var url: URL { get }
     var httpMethod: HTTPMethod { get }
     var isJSONEncoded: Bool { get }
+    var headers: [String: String]? { get }
 }
 
 enum EndPointEnum {
@@ -70,8 +72,16 @@ enum EndPointEnum {
     // defining end point types
 extension EndPointEnum: Request {
     
+        // set headers
+    var headers: [String: String]? {
+        switch self {
+            case .users, .create:
+                return ["Accept": "application/json"]
+            case .posts:
+                return ["Content-Type": "application/json"]
+        }
+    }
     
-    var contentType: String { return "application/json" }
         // is Json encoded
     var isJSONEncoded: Bool {
         switch self {
@@ -81,6 +91,7 @@ extension EndPointEnum: Request {
                 return true
         }
     }
+    
         // is http request methods
     var httpMethod: HTTPMethod {
         switch self {
@@ -92,6 +103,7 @@ extension EndPointEnum: Request {
                 return .get
         }
     }
+    
         // full URL to return
     var url: URL {
         switch self {
@@ -147,6 +159,16 @@ enum APIError: Error {
 
 
 
+enum HTTPHeaderField: String {
+    case authentication = "Authentication"
+    case contentType = "Content-Type"
+    case acceptType = "Accept"
+    case acceptEncoding = "Accept-Encoding"
+    case authorization = "Authorization"
+    case acceptLanguage = "Accept-Language"
+    case userAgent = "User-Agent"
+    case json = "application/json"
+}
 
 
 

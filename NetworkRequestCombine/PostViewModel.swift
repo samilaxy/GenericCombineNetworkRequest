@@ -36,7 +36,6 @@ class PostViewModel: ObservableObject {
     func searchUsers(limit: Int) {
         
         let params: Params = [ "limit": limit ]
-        
         manager.request(from: .users, paramsData: params)
             .sink(receiveCompletion: { completion in
                     // Handle completion or error if needed

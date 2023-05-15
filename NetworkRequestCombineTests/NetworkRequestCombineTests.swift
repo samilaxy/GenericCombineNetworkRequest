@@ -1,13 +1,14 @@
 //
-//  GenericCombineNetworkRequestTests.swift
-//  GenericCombineNetworkRequestTests
+//  NetworkRequestCombineTests.swift
+//  NetworkRequestCombineTests
 //
-//  Created by Noye Samuel on 15/05/2023.
+//  Created by Noye Samuel on 26/03/2023.
 //
 
 import XCTest
+@testable import NetworkRequestCombine
 
-final class GenericCombineNetworkRequestTests: XCTestCase {
+final class NetworkRequestCombineTests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -27,7 +28,7 @@ final class GenericCombineNetworkRequestTests: XCTestCase {
 
     func testPerformanceExample() throws {
         // This is an example of a performance test case.
-        measure {
+        self.measure {
             // Put the code you want to measure the time of here.
         }
     }

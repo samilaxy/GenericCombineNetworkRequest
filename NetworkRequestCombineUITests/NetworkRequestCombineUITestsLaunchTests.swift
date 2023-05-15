@@ -1,13 +1,13 @@
 //
-//  GenericCombineNetworkRequestUITestsLaunchTests.swift
-//  GenericCombineNetworkRequestUITests
+//  NetworkRequestCombineUITestsLaunchTests.swift
+//  NetworkRequestCombineUITests
 //
-//  Created by Noye Samuel on 15/05/2023.
+//  Created by Noye Samuel on 26/03/2023.
 //
 
 import XCTest
 
-final class GenericCombineNetworkRequestUITestsLaunchTests: XCTestCase {
+final class NetworkRequestCombineUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
